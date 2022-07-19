@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using DataAccess.EF;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DataAccess.EF.Models;
-using DataAccess.EF.Repositories;
 
 namespace OnlineShop.Controllers
 {
@@ -9,50 +9,40 @@ namespace OnlineShop.Controllers
     [ApiController]
     public class ItemsController : ControllerBase
     {
-        public ItemsController(IApplicationRepository<Item> itemRepository)
+        public ItemsController(IUnitOfWork uow)
         {
-            _itemRepository = itemRepository;
+            _uow = uow;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Item>>> GetItems([FromQuery] int categoryId, [FromQuery] int page, [FromQuery] int limit)
+        public ActionResult<IEnumerable<Item>> GetItems([FromQuery] int categoryId, [FromQuery] int page, [FromQuery] int limit)
         {
-            return await _itemRepository
-                .Context
-                .Items
-                .Where(i => i.CategoryId.Equals(categoryId))
+            return _uow.ItemRepository
+                .Get(i => i.CategoryId.Equals(categoryId))
                 .Skip((page - 1) * limit)
                 .Take(limit)
-                .ToListAsync();
+                .ToList();
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Item?>> GetItem(int id)
+        public ActionResult<Item?> GetItem(int id)
         {
-            return await _itemRepository.Context.Items.SingleOrDefaultAsync(i => i.Id.Equals(id));
+            return _uow.ItemRepository.Get(i => i.Id.Equals(id)).SingleOrDefault();
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> PutItem(int id, Item item)
+        public IActionResult PutItem(int id, Item? item)
         {
-            if (id != item.Id)
-            {
-                return BadRequest();
-            }
-
-            _itemRepository.SetModifiedState(item);
+            if (item == null || id != item.Id) return BadRequest();
 
             try
             {
-                await _itemRepository.SaveChangesAsync();
+                _uow.ItemRepository.Update(item);
+                _uow.Save();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (await _itemRepository.FindAsync(id) == null)
-                {
-                    return NotFound();
-                }
-
+                if (_uow.ItemRepository.Find(id) == null) return NotFound();
                 throw;
             }
 
@@ -60,29 +50,28 @@ namespace OnlineShop.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Item>> PostItem(Item item)
+        public ActionResult<Item> PostItem(Item? item)
         {
-            await _itemRepository.AddAsync(item);
-            await _itemRepository.SaveChangesAsync();
+            if (item == null) return BadRequest();
+
+            _uow.ItemRepository.Add(item);
+            _uow.Save();
 
             return CreatedAtAction("GetItem", new { id = item.Id }, item);
         }
 
         [HttpDelete("{id:int}")]
-        public async Task<IActionResult> DeleteItem(int id)
+        public IActionResult DeleteItem(int id)
         {
-            var item = await _itemRepository.FindAsync(id);
-            if (item == null)
-            {
-                return NotFound();
-            }
+            var item = _uow.ItemRepository.Find(id);
+            if (item == null) return NotFound();
 
-            _itemRepository.Remove(item);
-            await _itemRepository.SaveChangesAsync();
+            _uow.ItemRepository.Remove(item);
+            _uow.Save();
 
             return NoContent();
         }
 
-        private readonly IApplicationRepository<Item> _itemRepository;
+        private readonly IUnitOfWork _uow;
     }
 }

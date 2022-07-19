@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using DataAccess.EF;
 using DataAccess.EF.DataAccess;
 using DataAccess.EF.Models;
 using DataAccess.EF.Repositories;
@@ -7,10 +8,11 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ApiContext>(opt => opt.UseInMemoryDatabase("OnlineShop"));
-builder.Services.AddScoped<IApplicationRepository<Category>, ApplicationRepository<Category>>();
-builder.Services.AddScoped<IApplicationRepository<Item>, ApplicationRepository<Item>>();
+builder.Services.AddScoped<IGenericRepository<Category>, GenericRepository<Category>>();
+builder.Services.AddScoped<IGenericRepository<Item>, GenericRepository<Item>>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-builder.Services.AddControllers().AddJsonOptions(x => x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -35,14 +37,7 @@ app.Run();
 void InitTestData(WebApplication app)
 {
     var score = app.Services.CreateScope();
-    var context = score.ServiceProvider.GetService<ApiContext>();
-    var itemRepository = score.ServiceProvider.GetService<IApplicationRepository<Item>>();
-    var categoryRepository = score.ServiceProvider.GetService<IApplicationRepository<Category>>();
-
-    if (context == null)
-    {
-        return;
-    }
+    var uow = score.ServiceProvider.GetService<IUnitOfWork>();
 
     var categories = new List<Category>
     {
@@ -63,8 +58,8 @@ void InitTestData(WebApplication app)
         new() { Id = 8, Name = "Officine Creative", Price = 49000, CategoryId = 2 },
         new() { Id = 9, Name = "Prada", Price = 190000, CategoryId = 2 }
     };
-    
-    categoryRepository!.AddRange(categories);
-    itemRepository!.AddRange(items);
-    context.SaveChanges();
+
+    uow!.CategoryRepository.AddRange(categories);
+    uow!.ItemRepository.AddRange(items);
+    uow!.Save();
 }
