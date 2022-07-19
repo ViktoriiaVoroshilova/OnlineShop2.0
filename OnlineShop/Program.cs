@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using DataAccess.EF;
+﻿using DataAccess.EF;
 using DataAccess.EF.DataAccess;
 using DataAccess.EF.Models;
 using DataAccess.EF.Repositories;

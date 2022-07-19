@@ -17,7 +17,7 @@ namespace OnlineShop.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<Category>> GetCategories()
         {
-            return _uow.CategoryRepository.Get();
+            return _uow.CategoryRepository.Get().ToList();
         }
 
         [HttpGet("{id:int}")]

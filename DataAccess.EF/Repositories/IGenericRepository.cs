@@ -7,7 +7,7 @@ public interface IGenericRepository<TEntityType>
     public List<TEntityType> Get(
         Expression<Func<TEntityType, bool>>? filter = null,
         Func<IQueryable<TEntityType>, IOrderedQueryable<TEntityType>>? orderBy = null,
-        string includeProperties = "");
+        string? includeProperties = "");
 
     public TEntityType? Find(int id);
 

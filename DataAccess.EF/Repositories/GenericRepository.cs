@@ -15,15 +15,19 @@ public class GenericRepository<TEntityType> : IGenericRepository<TEntityType> wh
     public virtual List<TEntityType> Get(
         Expression<Func<TEntityType, bool>>? filter = null,
         Func<IQueryable<TEntityType>, IOrderedQueryable<TEntityType>>? orderBy = null,
-        string includeProperties = "")
+        string? includeProperties = "")
     {
         IQueryable<TEntityType> query = _dbSet;
 
         if (filter != null) query = query.Where(filter!);
 
-        query = includeProperties
-            .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-            .Aggregate(query, (current, includeProperty) => current.Include(includeProperty));
+        if (!string.IsNullOrEmpty(includeProperties))
+        {
+            query = includeProperties!
+                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                .Aggregate(query, (current, includeProperty) => current.Include(includeProperty));
+
+        }
 
         return orderBy != null ? orderBy(query!).ToList() : query.ToList()!;
     }
