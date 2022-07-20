@@ -9,5 +9,5 @@ public interface IUnitOfWork : IDisposable
 
     public IGenericRepository<Category> CategoryRepository { get; }
 
-    public void Save();
+    public Task SaveAsync();
 }

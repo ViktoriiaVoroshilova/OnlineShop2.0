@@ -12,7 +12,7 @@ public class GenericRepository<TEntityType> : IGenericRepository<TEntityType> wh
         _dbSet = context.Set<TEntityType>();
     }
 
-    public virtual List<TEntityType> Get(
+    public async Task<IEnumerable<TEntityType>> GetAsync(
         Expression<Func<TEntityType, bool>>? filter = null,
         Func<IQueryable<TEntityType>, IOrderedQueryable<TEntityType>>? orderBy = null,
         string? includeProperties = "")
@@ -29,12 +29,12 @@ public class GenericRepository<TEntityType> : IGenericRepository<TEntityType> wh
 
         }
 
-        return orderBy != null ? orderBy(query!).ToList() : query.ToList()!;
+        return orderBy != null ? await orderBy(query!).ToListAsync() : await query.ToListAsync()!;
     }
 
-    public TEntityType? Find(int id)
+    public async Task<TEntityType?> FindAsync(int id)
     {
-        return _dbSet.Find(id);
+        return await _dbSet.FindAsync(id);
     }
 
     public void Add(TEntityType entity)

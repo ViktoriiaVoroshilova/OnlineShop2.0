@@ -20,9 +20,9 @@ public class UnitOfWork : IUnitOfWork
 
     public IGenericRepository<Category> CategoryRepository { get; }
 
-    public void Save()
+    public async Task SaveAsync()
     {
-        _context.SaveChanges();
+        await _context.SaveChangesAsync();
     }
 
     protected virtual void Dispose(bool disposing)

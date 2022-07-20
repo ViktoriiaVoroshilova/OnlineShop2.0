@@ -60,5 +60,5 @@ void InitTestData(WebApplication app)
 
     uow!.CategoryRepository.AddRange(categories);
     uow!.ItemRepository.AddRange(items);
-    uow!.Save();
+    uow!.SaveAsync();
 }

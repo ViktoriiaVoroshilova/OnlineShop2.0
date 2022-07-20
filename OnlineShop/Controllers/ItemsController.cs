@@ -15,34 +15,29 @@ namespace OnlineShop.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<Item>> GetItems([FromQuery] int categoryId, [FromQuery] int page, [FromQuery] int limit)
+        public async Task<IEnumerable<Item>> GetItems()
         {
-            return _uow.ItemRepository
-                .Get(i => i.CategoryId.Equals(categoryId))
-                .Skip((page - 1) * limit)
-                .Take(limit)
-                .ToList();
+            return await _uow.ItemRepository.GetAsync();
         }
 
         [HttpGet("{id:int}")]
-        public ActionResult<Item?> GetItem(int id)
+        public async Task<ActionResult<Item?>> GetItem(int id)
         {
-            return _uow.ItemRepository.Get(i => i.Id.Equals(id)).SingleOrDefault();
+            var items = await _uow.ItemRepository.GetAsync(i => i.Id.Equals(id));
+            return items.SingleOrDefault();
         }
 
-        [HttpPut("{id:int}")]
-        public IActionResult PutItem(int id, Item? item)
+        [HttpPut]
+        public async Task<IActionResult> PutItem(Item item)
         {
-            if (item == null || id != item.Id) return BadRequest();
-
             try
             {
                 _uow.ItemRepository.Update(item);
-                _uow.Save();
+                await _uow.SaveAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (_uow.ItemRepository.Find(id) == null) return NotFound();
+                if (await _uow.ItemRepository.FindAsync(item.Id) == null) return NotFound();
                 throw;
             }
 
@@ -50,24 +45,22 @@ namespace OnlineShop.Controllers
         }
 
         [HttpPost]
-        public ActionResult<Item> PostItem(Item? item)
+        public async Task<ActionResult<Item>> PostItem(Item item)
         {
-            if (item == null) return BadRequest();
-
             _uow.ItemRepository.Add(item);
-            _uow.Save();
+            await _uow.SaveAsync();
 
             return CreatedAtAction("GetItem", new { id = item.Id }, item);
         }
 
         [HttpDelete("{id:int}")]
-        public IActionResult DeleteItem(int id)
+        public async Task<IActionResult> DeleteItem(int id)
         {
-            var item = _uow.ItemRepository.Find(id);
+            var item = await _uow.ItemRepository.FindAsync(id);
             if (item == null) return NotFound();
 
             _uow.ItemRepository.Remove(item);
-            _uow.Save();
+            await _uow.SaveAsync();
 
             return NoContent();
         }

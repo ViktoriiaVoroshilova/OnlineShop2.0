@@ -15,15 +15,15 @@ namespace OnlineShop.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<Category>> GetCategories()
+        public async Task<IEnumerable<Category>> GetCategories()
         {
-            return _uow.CategoryRepository.Get().ToList();
+            return await _uow.CategoryRepository.GetAsync();
         }
 
         [HttpGet("{id:int}")]
-        public ActionResult<Category> GetCategory(int id)
+        public async Task<ActionResult<Category>> GetCategory(int id)
         {
-            var category = _uow.CategoryRepository.Find(id);
+            var category = await _uow.CategoryRepository.FindAsync(id);
 
             if (category == null)
             {
@@ -33,19 +33,17 @@ namespace OnlineShop.Controllers
             return category;
         }
 
-        [HttpPut("{id:int}")]
-        public IActionResult PutCategory(int id, Category? category)
+        [HttpPut]
+        public async Task<IActionResult> PutCategory(Category category)
         {
-            if (category == null || id != category.Id) return BadRequest();
-
             try
             {
                 _uow.CategoryRepository.Update(category);
-                _uow.Save();
+                await _uow.SaveAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (_uow.CategoryRepository.Find(id) == null) return NotFound();
+                if (await _uow.CategoryRepository.FindAsync(category.Id) == null) return NotFound();
                 throw;
             }
 
@@ -53,29 +51,38 @@ namespace OnlineShop.Controllers
         }
 
         [HttpPost]
-        public ActionResult<Category> PostCategory(Category? category)
+        public async Task<ActionResult<Category>> PostCategory(Category category)
         {
-            if (category == null) return BadRequest();
-
             _uow.CategoryRepository.Add(category);
-            _uow.Save();
+            await _uow.SaveAsync();
 
             return CreatedAtAction("GetCategory", new { id = category.Id }, category);
         }
 
 
         [HttpDelete("{id:int}")]
-        public IActionResult DeleteCategory(int id)
+        public async Task<IActionResult> DeleteCategory(int id)
         {
-            var category = _uow.CategoryRepository.Find(id);
+            var category = await _uow.CategoryRepository.FindAsync(id);
             if (category == null) return NotFound();
 
-            var items = _uow.ItemRepository.Get(i => i.CategoryId.Equals(category.Id));
+            var items = await _uow.ItemRepository.GetAsync(i => i.CategoryId.Equals(category.Id));
             _uow.ItemRepository.RemoveRange(items);
             _uow.CategoryRepository.Remove(category);
-            _uow.Save();
+            await _uow.SaveAsync();
 
             return NoContent();
+        }
+
+
+        [HttpGet("{id:int}/Items")]
+        public async Task<ActionResult<IEnumerable<Item>>> GetItems(int id, [FromQuery] int page, [FromQuery] int limit)
+        {
+            var items = await _uow.ItemRepository.GetAsync(i => i.CategoryId.Equals(id));
+            return items
+                .Skip((page - 1) * limit)
+                .Take(limit)
+                .ToList();
         }
 
         private readonly IUnitOfWork _uow;

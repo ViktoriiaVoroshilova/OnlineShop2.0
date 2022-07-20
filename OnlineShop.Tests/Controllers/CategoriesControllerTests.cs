@@ -24,72 +24,46 @@ namespace OnlineShop.Tests.Controllers
         }
 
         [TestMethod]
-        public void GetCategoriesTest()
+        public async Task GetCategoriesTest()
         {
             //arrange
             var categories = _fixture.CreateMany<Category>().ToList();
 
             _uow.Setup(x => x.CategoryRepository).Returns(_categoriesRepository.Object);
-            _categoriesRepository.Setup(x => x.Get(null, null, string.Empty)).Returns(categories);
+            _categoriesRepository.Setup(x => x.GetAsync(null, null, string.Empty)).ReturnsAsync(categories);
 
             //act
-            var actual = _target.GetCategories();
+            var actual = await _target.GetCategories();
 
             //assert
-            actual.Value.Should().BeEquivalentTo(categories,
-                $"Actual {string.Join(", ", actual.Value!)} is not equal expected {string.Join(", ", categories)}.");
+            actual.Should().BeEquivalentTo(categories,
+                $"Actual {string.Join(", ", actual)} is not equal expected {string.Join(", ", categories)}.");
             _uow.Verify(x => x.CategoryRepository, Times.Once);
-            _categoriesRepository.Verify(x => x.Get(null, null, string.Empty), Times.Once);
+            _categoriesRepository.Verify(x => x.GetAsync(null, null, string.Empty), Times.Once);
         }
 
         [TestMethod]
-        public void PutCategoryTest()
+        public async Task PutCategoryTest()
         {
             //arrange
             var category = _fixture.Create<Category>();
 
             _uow.Setup(x => x.CategoryRepository).Returns(_categoriesRepository.Object);
-            _uow.Setup(x => x.Save());
+            _uow.Setup(x => x.SaveAsync()).Returns(Task.CompletedTask);
             _categoriesRepository.Setup(x => x.Update(category));
 
             //act
-            var actual = _target.PutCategory(category.Id, category);
+            var actual = await _target.PutCategory(category);
 
             //assert
             (actual as ContentResult)?.StatusCode.Should().Be(204, "Status code is not NoContent");
             _uow.Verify(x => x.CategoryRepository, Times.Once);
-            _uow.Verify(x => x.Save(), Times.Once);
+            _uow.Verify(x => x.SaveAsync(), Times.Once);
             _categoriesRepository.Verify(x => x.Update(category), Times.Once);
         }
 
         [TestMethod]
-        public void PutCategoryNullCategoryTest()
-        {
-            //arrange
-            var category = null as Category;
-
-            //act
-            var actual = _target.PutCategory(_fixture.Create<int>(), category);
-
-            //assert
-            (actual as StatusCodeResult)?.StatusCode.Should().Be(400, "Status code is not NoContent");
-        }
-
-        [TestMethod]
-        public void PutCategoryWrongCategoryIdTest()
-        {
-            //arrange
-            var category = _fixture.Create<Category>();
-
-            //act
-            var actual = _target.PutCategory(_fixture.Create<int>(), category);
-
-            //assert
-            (actual as StatusCodeResult)?.StatusCode.Should().Be(400, "Status code is not NoContent");
-        }
-
-        [TestMethod]
-        public void PutCategoryOptimisticExceptionTest()
+        public async Task PutCategoryOptimisticExceptionTest()
         {
             //arrange
             var category = _fixture.Create<Category>();
@@ -97,22 +71,22 @@ namespace OnlineShop.Tests.Controllers
 
             _uow.Setup(x => x.CategoryRepository).Returns(_categoriesRepository.Object);
             _categoriesRepository.Setup(x => x.Update(category));
-            _categoriesRepository.Setup(x => x.Find(category.Id)).Returns(null as Category);
-            _uow.Setup(x => x.Save()).Throws(exception);
+            _categoriesRepository.Setup(x => x.FindAsync(category.Id)).ReturnsAsync(default(Category));
+            _uow.Setup(x => x.SaveAsync()).Throws(exception);
 
             //act
-            var actual = _target.PutCategory(category.Id, category);
+            var actual = await _target.PutCategory(category);
 
             //assert
             (actual as StatusCodeResult)?.StatusCode.Should().Be(404, "Status code is not NoContent");
             _uow.Verify(x => x.CategoryRepository, Times.Exactly(2));
-            _uow.Verify(x => x.Save(), Times.Once);
+            _uow.Verify(x => x.SaveAsync(), Times.Once);
             _categoriesRepository.Verify(x => x.Update(category), Times.Once);
-            _categoriesRepository.Verify(x => x.Find(category.Id), Times.Once);
+            _categoriesRepository.Verify(x => x.FindAsync(category.Id), Times.Once);
         }
 
         [TestMethod]
-        public void PutCategoryOptimisticExceptionThrowTest()
+        public async Task PutCategoryOptimisticExceptionThrowTest()
         {
             //arrange
             var category = _fixture.Create<Category>();
@@ -120,18 +94,18 @@ namespace OnlineShop.Tests.Controllers
 
             _uow.Setup(x => x.CategoryRepository).Returns(_categoriesRepository.Object);
             _categoriesRepository.Setup(x => x.Update(category));
-            _categoriesRepository.Setup(x => x.Find(category.Id)).Returns(category);
-            _uow.Setup(x => x.Save()).Throws(exception);
+            _categoriesRepository.Setup(x => x.FindAsync(category.Id)).ReturnsAsync(category);
+            _uow.Setup(x => x.SaveAsync()).Throws(exception);
 
             //act & assert
-            _target.Invoking(x => x.PutCategory(category.Id, category))
+            await _target.Invoking(x => x.PutCategory(category))
                 .Should()
-                .Throw<DbUpdateConcurrencyException>();
+                .ThrowAsync<DbUpdateConcurrencyException>();
 
             _uow.Verify(x => x.CategoryRepository, Times.Exactly(2));
-            _uow.Verify(x => x.Save(), Times.Once);
+            _uow.Verify(x => x.SaveAsync(), Times.Once);
             _categoriesRepository.Verify(x => x.Update(category), Times.Once);
-            _categoriesRepository.Verify(x => x.Find(category.Id), Times.Once);
+            _categoriesRepository.Verify(x => x.FindAsync(category.Id), Times.Once);
         }
 
         private Fixture _fixture = null!;

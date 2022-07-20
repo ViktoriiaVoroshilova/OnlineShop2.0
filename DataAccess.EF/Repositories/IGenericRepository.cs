@@ -4,12 +4,12 @@ namespace DataAccess.EF.Repositories;
 
 public interface IGenericRepository<TEntityType>
 {
-    public List<TEntityType> Get(
+    public Task<IEnumerable<TEntityType>> GetAsync(
         Expression<Func<TEntityType, bool>>? filter = null,
         Func<IQueryable<TEntityType>, IOrderedQueryable<TEntityType>>? orderBy = null,
         string? includeProperties = "");
 
-    public TEntityType? Find(int id);
+    public Task<TEntityType?> FindAsync(int id);
 
     public void Add(TEntityType entity);
 
