@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DataAccess.EF.Models;
+using OnlineShop.Services;
 
 namespace OnlineShop.Controllers
 {
@@ -9,22 +10,22 @@ namespace OnlineShop.Controllers
     [ApiController]
     public class ItemsController : ControllerBase
     {
-        public ItemsController(IUnitOfWork uow)
+        public ItemsController(IUnitOfWork uow, IItemsService itemsService)
         {
             _uow = uow;
+            _itemsService = itemsService;
         }
 
         [HttpGet]
         public async Task<IEnumerable<Item>> GetItems()
         {
-            return await _uow.ItemRepository.GetAsync();
+            return await _uow.ItemRepository.Get().ToListAsync();
         }
 
         [HttpGet("{id:int}")]
         public async Task<ActionResult<Item?>> GetItem(int id)
         {
-            var items = await _uow.ItemRepository.GetAsync(i => i.Id.Equals(id));
-            return items.SingleOrDefault();
+            return await _itemsService.GetAsync(id);    
         }
 
         [HttpPut]
@@ -32,7 +33,7 @@ namespace OnlineShop.Controllers
         {
             try
             {
-                _uow.ItemRepository.Update(item);
+                await _uow.ItemRepository.UpdateAsync(item);
                 await _uow.SaveAsync();
             }
             catch (DbUpdateConcurrencyException)
@@ -47,7 +48,7 @@ namespace OnlineShop.Controllers
         [HttpPost]
         public async Task<ActionResult<Item>> PostItem(Item item)
         {
-            _uow.ItemRepository.Add(item);
+            await _uow.ItemRepository.AddAsync(item);
             await _uow.SaveAsync();
 
             return CreatedAtAction("GetItem", new { id = item.Id }, item);
@@ -56,15 +57,17 @@ namespace OnlineShop.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> DeleteItem(int id)
         {
-            var item = await _uow.ItemRepository.FindAsync(id);
-            if (item == null) return NotFound();
-
-            _uow.ItemRepository.Remove(item);
-            await _uow.SaveAsync();
-
+            await _itemsService.DeleteAsync(id);
             return NoContent();
         }
 
+        [HttpGet("~/api/Categories/{categoryId:int}/Items")]
+        public async Task<IEnumerable<Item>> GetItems(int categoryId, [FromQuery] int page, [FromQuery] int limit)
+        {
+            return await _itemsService.GetItemsOnPageAsync(categoryId, page, limit);
+        }
+
         private readonly IUnitOfWork _uow;
+        private readonly IItemsService _itemsService;
     }
 }

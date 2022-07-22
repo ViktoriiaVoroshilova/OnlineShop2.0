@@ -3,6 +3,7 @@ using DataAccess.EF.DataAccess;
 using DataAccess.EF.Models;
 using DataAccess.EF.Repositories;
 using Microsoft.EntityFrameworkCore;
+using OnlineShop.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,8 @@ builder.Services.AddDbContext<ApiContext>(opt => opt.UseInMemoryDatabase("Online
 builder.Services.AddScoped<IGenericRepository<Category>, GenericRepository<Category>>();
 builder.Services.AddScoped<IGenericRepository<Item>, GenericRepository<Item>>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IItemsService, ItemsService>();
+builder.Services.AddScoped<ICategoriesService, CategoriesService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -58,7 +61,7 @@ void InitTestData(WebApplication app)
         new() { Id = 9, Name = "Prada", Price = 190000, CategoryId = 2 }
     };
 
-    uow!.CategoryRepository.AddRange(categories);
-    uow!.ItemRepository.AddRange(items);
+    uow!.CategoryRepository.AddRangeAsync(categories);
+    uow!.ItemRepository.AddRangeAsync(items);
     uow!.SaveAsync();
 }

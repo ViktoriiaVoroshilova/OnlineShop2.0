@@ -27,10 +27,12 @@ namespace OnlineShop.Tests.Controllers
         public async Task GetCategoriesTest()
         {
             //arrange
-            var categories = _fixture.CreateMany<Category>().ToList();
+            var categories = _fixture
+                .CreateMany<Category>()
+                .AsQueryable();
 
             _uow.Setup(x => x.CategoryRepository).Returns(_categoriesRepository.Object);
-            _categoriesRepository.Setup(x => x.GetAsync(null, null, string.Empty)).ReturnsAsync(categories);
+            _categoriesRepository.Setup(x => x.Get()).Returns(categories);
 
             //act
             var actual = await _target.GetCategories();
@@ -39,7 +41,7 @@ namespace OnlineShop.Tests.Controllers
             actual.Should().BeEquivalentTo(categories,
                 $"Actual {string.Join(", ", actual)} is not equal expected {string.Join(", ", categories)}.");
             _uow.Verify(x => x.CategoryRepository, Times.Once);
-            _categoriesRepository.Verify(x => x.GetAsync(null, null, string.Empty), Times.Once);
+            _categoriesRepository.Verify(x => x.Get(), Times.Once);
         }
 
         [TestMethod]
@@ -50,7 +52,7 @@ namespace OnlineShop.Tests.Controllers
 
             _uow.Setup(x => x.CategoryRepository).Returns(_categoriesRepository.Object);
             _uow.Setup(x => x.SaveAsync()).Returns(Task.CompletedTask);
-            _categoriesRepository.Setup(x => x.Update(category));
+            _categoriesRepository.Setup(x => x.UpdateAsync(category));
 
             //act
             var actual = await _target.PutCategory(category);
@@ -59,7 +61,7 @@ namespace OnlineShop.Tests.Controllers
             (actual as ContentResult)?.StatusCode.Should().Be(204, "Status code is not NoContent");
             _uow.Verify(x => x.CategoryRepository, Times.Once);
             _uow.Verify(x => x.SaveAsync(), Times.Once);
-            _categoriesRepository.Verify(x => x.Update(category), Times.Once);
+            _categoriesRepository.Verify(x => x.UpdateAsync(category), Times.Once);
         }
 
         [TestMethod]
@@ -70,7 +72,7 @@ namespace OnlineShop.Tests.Controllers
             var exception = new DbUpdateConcurrencyException();
 
             _uow.Setup(x => x.CategoryRepository).Returns(_categoriesRepository.Object);
-            _categoriesRepository.Setup(x => x.Update(category));
+            _categoriesRepository.Setup(x => x.UpdateAsync(category));
             _categoriesRepository.Setup(x => x.FindAsync(category.Id)).ReturnsAsync(default(Category));
             _uow.Setup(x => x.SaveAsync()).Throws(exception);
 
@@ -81,7 +83,7 @@ namespace OnlineShop.Tests.Controllers
             (actual as StatusCodeResult)?.StatusCode.Should().Be(404, "Status code is not NoContent");
             _uow.Verify(x => x.CategoryRepository, Times.Exactly(2));
             _uow.Verify(x => x.SaveAsync(), Times.Once);
-            _categoriesRepository.Verify(x => x.Update(category), Times.Once);
+            _categoriesRepository.Verify(x => x.UpdateAsync(category), Times.Once);
             _categoriesRepository.Verify(x => x.FindAsync(category.Id), Times.Once);
         }
 
@@ -93,7 +95,7 @@ namespace OnlineShop.Tests.Controllers
             var exception = new DbUpdateConcurrencyException();
 
             _uow.Setup(x => x.CategoryRepository).Returns(_categoriesRepository.Object);
-            _categoriesRepository.Setup(x => x.Update(category));
+            _categoriesRepository.Setup(x => x.UpdateAsync(category));
             _categoriesRepository.Setup(x => x.FindAsync(category.Id)).ReturnsAsync(category);
             _uow.Setup(x => x.SaveAsync()).Throws(exception);
 
@@ -104,7 +106,7 @@ namespace OnlineShop.Tests.Controllers
 
             _uow.Verify(x => x.CategoryRepository, Times.Exactly(2));
             _uow.Verify(x => x.SaveAsync(), Times.Once);
-            _categoriesRepository.Verify(x => x.Update(category), Times.Once);
+            _categoriesRepository.Verify(x => x.UpdateAsync(category), Times.Once);
             _categoriesRepository.Verify(x => x.FindAsync(category.Id), Times.Once);
         }
 

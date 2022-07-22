@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using DataAccess.EF.DataAccess;
+﻿using DataAccess.EF.DataAccess;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataAccess.EF.Repositories;
@@ -12,24 +11,9 @@ public class GenericRepository<TEntityType> : IGenericRepository<TEntityType> wh
         _dbSet = context.Set<TEntityType>();
     }
 
-    public async Task<IEnumerable<TEntityType>> GetAsync(
-        Expression<Func<TEntityType, bool>>? filter = null,
-        Func<IQueryable<TEntityType>, IOrderedQueryable<TEntityType>>? orderBy = null,
-        string? includeProperties = "")
+    public IQueryable<TEntityType> Get()
     {
-        IQueryable<TEntityType> query = _dbSet;
-
-        if (filter != null) query = query.Where(filter!);
-
-        if (!string.IsNullOrEmpty(includeProperties))
-        {
-            query = includeProperties!
-                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                .Aggregate(query, (current, includeProperty) => current.Include(includeProperty));
-
-        }
-
-        return orderBy != null ? await orderBy(query!).ToListAsync() : await query.ToListAsync()!;
+        return _dbSet;
     }
 
     public async Task<TEntityType?> FindAsync(int id)
@@ -37,35 +21,37 @@ public class GenericRepository<TEntityType> : IGenericRepository<TEntityType> wh
         return await _dbSet.FindAsync(id);
     }
 
-    public void Add(TEntityType entity)
+    public async Task AddAsync(TEntityType entity)
     {
-        _context.Add(entity);
+        await _context.AddAsync(entity);
     }
 
-    public void AddRange(IEnumerable<TEntityType> entities)
+    public async Task AddRangeAsync(IEnumerable<TEntityType> entities)
     {
-        _context.AddRange(entities);
+        await _context.AddRangeAsync(entities);
     }
 
-    public void Remove(TEntityType entity)
+    public async Task RemoveAsync(TEntityType? entity)
     {
+        if (entity == null) return;
         if (_context.Entry(entity).State == EntityState.Detached)
         {
             _dbSet.Attach(entity);
         }
-        _dbSet.Remove(entity);
+        await Task.FromResult(_dbSet.Remove(entity));
     }
 
-    public void RemoveRange(IEnumerable<TEntityType> entities)
+    public async Task RemoveRangeAsync(IEnumerable<TEntityType> entities)
     {
-        _context.RemoveRange(entities);
+        _dbSet.RemoveRange(entities);
+        await Task.CompletedTask;
     }
 
-    public void Update(TEntityType entity)
+    public async Task UpdateAsync(TEntityType entity)
     {
         
         _dbSet.Attach(entity);
-        _context.Entry(entity).State = EntityState.Modified;
+        await Task.FromResult(_context.Entry(entity).State = EntityState.Modified);
     }
 
     private readonly DbSet<TEntityType> _dbSet;
