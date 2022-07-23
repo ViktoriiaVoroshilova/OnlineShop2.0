@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using OnlineShop.Controllers;
+using OnlineShop.Services;
 
 namespace OnlineShop.Tests.Controllers
 {
@@ -20,7 +21,8 @@ namespace OnlineShop.Tests.Controllers
             _fixture = new Fixture();
             _categoriesRepository = new Mock<IGenericRepository<Category>>(MockBehavior.Strict);
             _uow = new Mock<IUnitOfWork>(MockBehavior.Strict);
-            _target = new CategoriesController(_uow.Object);
+            _categoriesService = new Mock<ICategoriesService>(MockBehavior.Strict);
+            _target = new CategoriesController(_uow.Object, _categoriesService.Object);
         }
 
         [TestMethod]
@@ -114,5 +116,6 @@ namespace OnlineShop.Tests.Controllers
         private CategoriesController _target = null!;
         private Mock<IUnitOfWork> _uow = null!;
         private Mock<IGenericRepository<Category>> _categoriesRepository = null!;
+        private Mock<ICategoriesService> _categoriesService = null!;
     }
 }

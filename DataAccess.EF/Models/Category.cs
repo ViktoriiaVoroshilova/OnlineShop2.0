@@ -1,8 +1,9 @@
-﻿namespace DataAccess.EF.Models;
+﻿using System.ComponentModel.DataAnnotations;
 
-public class Category
+namespace DataAccess.EF.Models;
+
+public class Category : BaseModel
 {
-    public int Id { get; set; }
-
+    [Required]
     public string Name { get; set; } = null!;
 }

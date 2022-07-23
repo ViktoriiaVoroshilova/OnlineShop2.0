@@ -3,6 +3,7 @@ using DataAccess.EF.DataAccess;
 using DataAccess.EF.Models;
 using DataAccess.EF.Repositories;
 using Microsoft.EntityFrameworkCore;
+using OnlineShop.Filters;
 using OnlineShop.Services;
 
 var builder = WebApplication.CreateBuilder(args);

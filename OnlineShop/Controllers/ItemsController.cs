@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using DataAccess.EF.Models;
+using OnlineShop.Filters;
 using OnlineShop.Services;
 
 namespace OnlineShop.Controllers
@@ -29,18 +30,11 @@ namespace OnlineShop.Controllers
         }
 
         [HttpPut]
+        [ApiExceptionFilterAttribute]
         public async Task<IActionResult> PutItem(Item item)
         {
-            try
-            {
-                await _uow.ItemRepository.UpdateAsync(item);
-                await _uow.SaveAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (await _uow.ItemRepository.FindAsync(item.Id) == null) return NotFound();
-                throw;
-            }
+            await _uow.ItemRepository.UpdateAsync(item);
+            await _uow.SaveAsync();
 
             return NoContent();
         }

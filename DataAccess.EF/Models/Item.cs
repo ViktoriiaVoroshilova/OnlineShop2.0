@@ -1,12 +1,16 @@
-﻿namespace DataAccess.EF.Models;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-public class Item
+namespace DataAccess.EF.Models;
+
+public class Item : BaseModel
 {
-    public int Id { get; set; }
-
+    [Required]
     public string Name { get; set; } = null!;
 
+    [Required]
     public double Price { get; set; }
 
+    [ForeignKey(nameof(Category))]
     public int CategoryId { get; set; }
 }

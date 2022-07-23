@@ -13,13 +13,13 @@ public class ItemsService : IItemsService
 
     public async Task<IEnumerable<Item>> GetItemsOnPageAsync(int categoryId, int page, int limit)
     {
-        var skippedPreviousItems = page * limit - limit;
+        var previousItemsCount = page * limit - limit;
 
         return await _uow
             .ItemRepository
             .Get()
             .Where(i => i.CategoryId.Equals(categoryId))
-            .Skip(skippedPreviousItems)
+            .Skip(previousItemsCount)
             .Take(limit)
             .ToListAsync();
     }

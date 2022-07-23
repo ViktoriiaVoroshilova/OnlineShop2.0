@@ -3,7 +3,7 @@ using DataAccess.EF.Repositories;
 
 namespace DataAccess.EF;
 
-public interface IUnitOfWork : IDisposable
+public interface IUnitOfWork
 {
     public IGenericRepository<Item> ItemRepository { get; }
 
