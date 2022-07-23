@@ -20,20 +20,11 @@ namespace OnlineShop.Tests.Controllers
         {
             _fixture = new Fixture();
             _mocker = new AutoMocker(MockBehavior.Strict);
-            _categoriesRepository = new Mock<IGenericRepository<Category>>(MockBehavior.Strict);
-            _uow = new Mock<IUnitOfWork>(MockBehavior.Strict);
-            _categoriesService = new Mock<ICategoriesService>(MockBehavior.Strict);
-            _target = new CategoriesController(_uow.Object, _categoriesService.Object);
-            _controller = _mocker.CreateInstance<CategoriesController>();
+            _categoriesRepository = _mocker.GetMock<IGenericRepository<Category>>();
             _categoriesService = _mocker.GetMock<ICategoriesService>();
-            _uow
-                .Setup(x => x.CategoryRepository)
-                .Returns(_categoriesRepository.Object)
-                .Verifiable();
-            _uow
-                .Setup(x => x.SaveAsync())
-                .Returns(Task.CompletedTask)
-                .Verifiable();
+            _uow = _mocker.GetMock<IUnitOfWork>();
+
+            _target = _mocker.CreateInstance<CategoriesController>();
         }
 
         [TestMethod]
@@ -44,8 +35,15 @@ namespace OnlineShop.Tests.Controllers
                 .CreateMany<Category>()
                 .AsQueryable();
 
-            _uow.Setup(x => x.CategoryRepository.Get()).Returns(categories);
-            _categoriesRepository.Setup(x => x.Get()).Returns(categories);
+            _categoriesRepository
+                .Setup(x => x.Get())
+                .Returns(categories)
+                .Verifiable();
+
+            _uow
+                .Setup(x => x.CategoryRepository)
+                .Returns(_categoriesRepository.Object)
+                .Verifiable();
 
             //act
             var actual = await _target.GetCategories();
@@ -53,8 +51,7 @@ namespace OnlineShop.Tests.Controllers
             //assert
             actual.Should().BeEquivalentTo(categories,
                 $"Actual {string.Join(", ", actual)} is not equal expected {string.Join(", ", categories)}.");
-            _uow.Verify(x => x.CategoryRepository, Times.Once);
-            _categoriesRepository.Verify(x => x.Get(), Times.Once);
+            _mocker.VerifyAll();
         }
 
         [TestMethod]
@@ -63,18 +60,26 @@ namespace OnlineShop.Tests.Controllers
             //arrange
             var category = _fixture.Create<Category>();
 
-            _uow.Setup(x => x.CategoryRepository).Returns(_categoriesRepository.Object);
-            _uow.Setup(x => x.SaveAsync()).Returns(Task.CompletedTask);
-            _categoriesRepository.Setup(x => x.UpdateAsync(category)).Returns(Task.CompletedTask);
+            _categoriesRepository
+                .Setup(x => x.UpdateAsync(category))
+                .Returns(Task.CompletedTask)
+                .Verifiable();
+
+            _uow
+                .Setup(x => x.CategoryRepository)
+                .Returns(_categoriesRepository.Object)
+                .Verifiable();
+            _uow
+                .Setup(x => x.SaveAsync())
+                .Returns(Task.CompletedTask)
+                .Verifiable();
 
             //act
             var actual = await _target.PutCategory(category);
 
             //assert
             (actual as NoContentResult).Should().NotBeNull("Status code is not NoContent");
-            _uow.Verify(x => x.CategoryRepository, Times.Once);
-            _uow.Verify(x => x.SaveAsync(), Times.Once);
-            _categoriesRepository.Verify(x => x.UpdateAsync(category), Times.Once);
+            _mocker.VerifyAll();
         }
 
         [TestMethod]
@@ -90,28 +95,9 @@ namespace OnlineShop.Tests.Controllers
                 .Verifiable();
 
             // act
-            var actual = await _controller.DeleteCategory(id);
+            var actual = await _target.DeleteCategory(id);
 
             // assert
-            (actual as NoContentResult).Should().NotBeNull("Status code is not NoContent");
-            _mocker.VerifyAll();
-        }
-
-        [TestMethod]
-        public async Task PutCategoryAutoMockTest()
-        {
-            //arrange
-            var category = _fixture.Create<Category>();
-
-            _categoriesRepository
-                .Setup(x => x.UpdateAsync(category))
-                .Returns(Task.CompletedTask)
-                .Verifiable();
-
-            //act
-            var actual = await _target.PutCategory(category);
-
-            //assert
             (actual as NoContentResult).Should().NotBeNull("Status code is not NoContent");
             _mocker.VerifyAll();
         }
@@ -122,6 +108,5 @@ namespace OnlineShop.Tests.Controllers
         private Mock<IGenericRepository<Category>> _categoriesRepository = null!;
         private Mock<ICategoriesService> _categoriesService = null!;
         private AutoMocker _mocker = null!;
-        private CategoriesController _controller = null!;
     }
 }
