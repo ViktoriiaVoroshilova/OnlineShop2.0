@@ -1,0 +1,11 @@
+﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=570bcc20_002Da113_002D4bd8_002D8546_002Db69e99385bdc/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="PutCategoryOptimisticExceptionTest" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;MSTest::699C4216-821E-45EB-A4AD-D33DACE0C40D::net6.0::OnlineShop.Tests.Controllers.CategoriesControllerTests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=f0330e84_002Db1cc_002D4261_002Db82c_002D483bdb9b628a/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="CategoriesControllerTests" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;MSTest::699C4216-821E-45EB-A4AD-D33DACE0C40D::net6.0::OnlineShop.Tests.Controllers.CategoriesControllerTests&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
